@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/fisher44123/research-shopping-yuqing-skills/blob/main/skills/quick-research/references/adapter-schema.json",
+  "title": "BYOT Retrieval Registry Contract",
+  "description": "Standard JSON contract passed from any external retrieval/MCP adapter into the verification toolkit (citation_audit.py, review_check.py, sku_check.py, event_history_store.py).",
+  "type": "object",
+  "required": ["run_meta", "source_health", "evidence_items"],
+  "additionalProperties": false,
+  "properties": {
+    "run_meta": {
+      "type": "object",
+      "required": ["topic", "timestamp_utc"],
+      "additionalProperties": true,
+      "properties": {
+        "topic": { "type": "string", "minLength": 1 },
+        "scene": { "type": "string", "enum": ["tech", "digital", "life", "shopping", "opinion", "all"] },
+        "timestamp_utc": { "type": "string" },
+        "time_budget_sec": { "type": "number", "minimum": 0 }
+      }
+    },
+    "source_health": {
+      "type": "array",
+      "description": "Explicit per-source execution health ledger for Fail-Fast reporting.",
+      "items": {
+        "type": "object",
+        "required": ["source", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "source": { "type": "string", "minLength": 1 },
+          "status": {
+            "type": "string",
+            "enum": ["ok", "timeout", "auth_required", "rate_limited", "blocked", "error", "empty"]
+          },
+          "items_seen": { "type": "integer", "minimum": 0 },
+          "items_kept": { "type": "integer", "minimum": 0 },
+          "error_detail": { "type": "string" }
+        }
+      }
+    },
+    "evidence_items": {
+      "type": "array",
+      "description": "Registered evidence entries referenced via [SRC-xxx] in final reports. Geographic user tags or personal private identifiers must NEVER be included.",
+      "items": {
+        "type": "object",
+        "required": ["src_id", "source", "url", "snippet"],
+        "additionalProperties": false,
+        "properties": {
+          "src_id": {
+            "type": "string",
+            "pattern": "^SRC-(?:[A-Z0-9]{1,6}-)?\\d{3,4}$"
+          },
+          "source": { "type": "string", "minLength": 1 },
+          "title": { "type": "string" },
+          "url": { "type": "string", "minLength": 1 },
+          "author": { "type": "string" },
+          "published_at": { "type": "string" },
+          "time_status": {
+            "type": "string",
+            "enum": ["known", "estimated", "unknown"]
+          },
+          "engagement": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "likes": { "type": "integer", "minimum": 0 },
+              "comments": { "type": "integer", "minimum": 0 },
+              "views": { "type": "integer", "minimum": 0 }
+            }
+          },
+          "region_bucket": {
+            "type": "string",
+            "enum": ["domestic", "international", "unknown"]
+          },
+          "source_lineage": {
+            "type": "string",
+            "enum": ["official", "creator", "grassroots", "unknown"]
+          },
+          "snippet": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

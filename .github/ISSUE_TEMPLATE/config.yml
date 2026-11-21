@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "Scope Notice: No Scrapers / BYOT Only"
+    url: "https://github.com/fisher44123/research-shopping-yuqing-skills#readme"
+    about: "This repository intentionally excludes platform scrapers and anti-bot bypass tools. Please bring your own legal search/MCP adapters via adapter-schema.json."

@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.db
+*.sqlite
+*.sqlite3
+*.tmp
+*.bak
+.pytest_cache/
+.venv/
+venv/
+tools/review_log.md
+*.lock
+.DS_Store
+Thumbs.db

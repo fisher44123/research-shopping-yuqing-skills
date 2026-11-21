@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "suite_id": "yuqing-research-behavior",
+  "target": "yuqing-research",
+  "split_seed": 42,
+  "train_ratio": 0.6,
+  "trigger_cases": [
+    {
+      "case_id": "y-trigger-opinion",
+      "prompt": "某高校近期热点事件现在网上什么风向？分平台与立场说清楚，别只给一句「争议很大」。",
+      "expected": "should_trigger",
+      "runs": 3
+    },
+    {
+      "case_id": "y-trigger-overseas",
+      "prompt": "这项科技行业新规在海外社区是怎么被讨论的？和中文社区舆论有什么温差。",
+      "expected": "should_trigger",
+      "runs": 3
+    },
+    {
+      "case_id": "y-trigger-backfire",
+      "prompt": "某品牌新品是不是口碑翻车了，评论区主要在骂哪些具体问题？",
+      "expected": "should_trigger",
+      "runs": 3
+    },
+    {
+      "case_id": "y-sibling-shopping",
+      "prompt": "同价位这几台空气净化器我该买哪台，帮我算一下滤芯更换的单次/年均成本。",
+      "expected": "sibling",
+      "sibling_target": "shopping-research",
+      "runs": 3
+    },
+    {
+      "case_id": "y-sibling-quick",
+      "prompt": "这个报错怎么修复：ModuleNotFoundError: No module named 'pydantic_core'。",
+      "expected": "sibling",
+      "sibling_target": "quick-research",
+      "runs": 3
+    },
+    {
+      "case_id": "y-not-trigger-pure",
+      "prompt": "帮我写一段用 Python 实现归并排序的示例代码。",
+      "expected": "should_not_trigger",
+      "runs": 3
+    },
+    {
+      "case_id": "y-not-trigger-personal",
+      "prompt": "今天工作有点累，陪我随便聊几句放松一下。",
+      "expected": "should_not_trigger",
+      "runs": 3
+    },
+    {
+      "case_id": "y-trigger-early-timeline",
+      "prompt": "某突发公共话题早期有哪些真实帖子？把话题背景、民间原声与反转节点分开，别把回复热度当支持率。",
+      "expected": "should_trigger",
+      "runs": 3
+    },
+    {
+      "case_id": "y-edge-timeline",
+      "prompt": "把这个争议事件的完整时间线与历次辟谣反转捋清楚。",
+      "expected": "edge_case",
+      "runs": 3
+    }
+  ],
+  "output_cases": [
+    {
+      "case_id": "y-out-quadrant",
+      "prompt": "分析一下大众对「某订阅制软件突然涨价」的态度分布。",
+      "assertions": [
+        { "kind": "contains", "value": "四象限", "note": "必须给出四象限真实评论分布而非笼统定性" },
+        { "kind": "contains", "value": "血统", "note": "必须区分官媒/自媒体/民间真实散户信源" },
+        { "kind": "regex", "value": "(逐源状态|source_health)", "note": "各通道成功或受阻状态必须逐条写清" },
+        { "kind": "not_contains", "value": "已安全绕行", "note": "采集失败必须如实报出" }
+      ],
+      "compare_against": ["baseline_prompt"]
+    },
+    {
+      "case_id": "y-out-citation-and-heat",
+      "prompt": "评估某个争议话题的热度构成，哪些像真实用户讨论、哪些存在水军模板刷屏。",
+      "assertions": [
+        { "kind": "regex", "value": "SRC-\\d{3}", "note": "每条结论必须回指唯一证据编号" },
+        { "kind": "contains", "value": "引用校验", "note": "交付附录必须输出引用校验结果" },
+        { "kind": "regex", "value": "(quality|质量分项|权威度|一手度)", "note": "热度评估必须保留质量分项权重" }
+      ]
+    },
+    {
+      "case_id": "y-out-asr-guard",
+      "prompt": "这段访谈视频里当事人到底怎么回应的？仅有音视频口播，没有官方文字稿。",
+      "assertions": [
+        { "kind": "contains", "value": "asr_unverified", "note": "未经人工听核的语音转写片段必须打标" },
+        { "kind": "contains", "value": "回听", "note": "必须提醒引用前复核原始音视频" }
+      ]
+    }
+  ]
+}

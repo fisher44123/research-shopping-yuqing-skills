@@ -1,0 +1,64 @@
+{
+  "run_meta": {
+    "topic": "DemoFrame v2 开源框架架构与内存表现调研",
+    "scene": "tech",
+    "timestamp_utc": "2026-11-21T02:00:00Z",
+    "time_budget_sec": 60
+  },
+  "source_health": [
+    {
+      "source": "github_api",
+      "status": "ok",
+      "items_seen": 12,
+      "items_kept": 2
+    },
+    {
+      "source": "tech_forum",
+      "status": "timeout",
+      "items_seen": 0,
+      "items_kept": 0,
+      "error_detail": "上游接口 8s 读取超时，本轮未采到论坛长帖"
+    }
+  ],
+  "evidence_items": [
+    {
+      "src_id": "SRC-001",
+      "source": "github_api",
+      "title": "DemoFrame v2.4.0 Release Notes & Benchmark Summary",
+      "url": "https://example.com/demoframe/releases/v2.4.0",
+      "author": "maintainer-team",
+      "published_at": "2026-10-18",
+      "time_status": "known",
+      "engagement": { "likes": 128, "comments": 34 },
+      "region_bucket": "international",
+      "source_lineage": "official",
+      "snippet": "官方测试显示异步队列重构后单节点吞吐量稳定维持在每秒四十二次请求，支持静态配置热加载并修复了重试风暴。"
+    },
+    {
+      "src_id": "SRC-002",
+      "source": "github_issue",
+      "title": "Issue #418: 长时间运行后内存峰值突破 2.4GB 且连接池未释放",
+      "url": "https://example.com/demoframe/issues/418",
+      "author": "ops_engineer_42",
+      "published_at": "2026-11-02",
+      "time_status": "known",
+      "engagement": { "likes": 67, "comments": 19 },
+      "region_bucket": "domestic",
+      "source_lineage": "grassroots",
+      "snippet": "基准实测表明该版本在持续运行四小时后出现显著内存泄露与连接池句柄未释放现象，常驻内存占用飙升至峰值超过两千四百兆字节，社区多个性能问题追踪均指向后台定时清理协程未正确关闭。"
+    },
+    {
+      "src_id": "SRC-003",
+      "source": "changelog_archive",
+      "title": "DemoFrame v1.x Maintenance Notice",
+      "url": "https://example.com/demoframe/issues/301",
+      "author": "core_reviewer",
+      "published_at": "2026-08-12",
+      "time_status": "known",
+      "engagement": { "likes": 45, "comments": 11 },
+      "region_bucket": "international",
+      "source_lineage": "official",
+      "snippet": "v1 分支已与 v2 完全不兼容断代，旧插件接口于 2026 年 9 月停止维护，迁移需重写全部中间件。"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+name: "Bug Report / False Positive（工具误报或缺陷反馈）"
+description: "反馈 review_check / citation_audit / sku_check / event_history_store 的解析缺陷或误报"
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        注意：本仓库仅维护科研调研方法论（Skills）与纯离线确定性核验工具（Tools），不受理任何网站抓取或反爬绕过请求。
+  - type: dropdown
+    id: component
+    attributes:
+      label: "涉及组件（Affected Component）"
+      options:
+        - "tools/review_check.py"
+        - "tools/citation_audit.py"
+        - "tools/sku_check.py"
+        - "tools/event_history_store.py"
+        - "skills/* / evals/*"
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: "最小复现样本（Minimal Repro Input）"
+      description: "请粘贴导致误报或报错的最小 Markdown 片段 / 商品标题 / JSON 输入"
+      placeholder: |
+        目标标题：...
+        候选标题：...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: "预期结果 vs 实际输出（Expected vs Actual）"
+      validations:
+        required: true
+  - type: input
+    id: py_ver
+    attributes:
+      label: "Python 版本与系统"
+      placeholder: "e.g. Python 3.13 / Windows 11"
+    validations:
+      required: true

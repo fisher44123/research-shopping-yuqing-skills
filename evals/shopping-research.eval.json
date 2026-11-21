@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "suite_id": "shopping-research-behavior",
+  "target": "shopping-research",
+  "split_seed": 42,
+  "train_ratio": 0.6,
+  "trigger_cases": [
+    {
+      "case_id": "s-trigger-buy",
+      "prompt": "想买一台 2000 元以内的家用除湿机，南方回南天用，帮我挑两台值得下单的。",
+      "expected": "should_trigger",
+      "runs": 3
+    },
+    {
+      "case_id": "s-trigger-cost",
+      "prompt": "洗衣凝珠和浓缩洗衣液哪个单次使用成本更低，按一周洗五次衣服算。",
+      "expected": "should_trigger",
+      "runs": 3
+    },
+    {
+      "case_id": "s-trigger-sku",
+      "prompt": "漫步者 Comfo Clip 和 Comfo Clip Q2 是同款还是两代产品？各自真实差价多少。",
+      "expected": "should_trigger",
+      "runs": 3
+    },
+    {
+      "case_id": "s-sibling-quick",
+      "prompt": "Docker 容器里跑反向代理一直提示端口不通，怎么一步步排查？",
+      "expected": "sibling",
+      "sibling_target": "quick-research",
+      "runs": 3
+    },
+    {
+      "case_id": "s-sibling-yuqing",
+      "prompt": "这个家电品牌最近是不是因为质量门翻车了，全网评论区都在吐槽什么？",
+      "expected": "sibling",
+      "sibling_target": "yuqing-research",
+      "runs": 3
+    },
+    {
+      "case_id": "s-not-trigger-pure",
+      "prompt": "用通俗的话解释一下什么是通货膨胀与购买力平价。",
+      "expected": "should_not_trigger",
+      "runs": 3
+    },
+    {
+      "case_id": "s-not-trigger-file",
+      "prompt": "把这段发票明细整理成按日期排序的清单。",
+      "expected": "should_not_trigger",
+      "runs": 3
+    },
+    {
+      "case_id": "s-trigger-long-term-usage",
+      "prompt": "帮我查一下某系列机械键盘长期使用后的真实故障与售后反馈，别把回复数当好评率。",
+      "expected": "should_trigger",
+      "runs": 3
+    },
+    {
+      "case_id": "s-edge-review-vs-buy",
+      "prompt": "这款耳机的佩戴舒适度和漏音表现到底怎么样，值得现在入手吗？",
+      "expected": "edge_case",
+      "runs": 3
+    }
+  ],
+  "output_cases": [
+    {
+      "case_id": "s-out-price-evidence",
+      "prompt": "帮我查一下 200 元以内的男款直筒牛仔裤，要能看清不同渠道的真实成本和面料差异。",
+      "assertions": [
+        { "kind": "contains", "value": "价格", "note": "必须给出可核实的价格快照而非只贴链接" },
+        { "kind": "regex", "value": "(¥|元|到手价)", "note": "金额与结算口径必须清晰可核对" },
+        { "kind": "contains", "value": "型号", "note": "必须做 SKU/型号字段对齐，防张冠李戴" },
+        { "kind": "not_contains", "value": "已安全绕行", "note": "取价失败必须如实说明，禁止掩饰" }
+      ],
+      "compare_against": ["baseline_prompt"]
+    },
+    {
+      "case_id": "s-out-unpriced-kept",
+      "prompt": "对比三款 500 元档电煮锅的材质与安全边界，暂时抓不到页面实时价格也要保留候选。",
+      "assertions": [
+        { "kind": "contains", "value": "候选", "note": "未取到实时价格不能直接淘汰优质候选" },
+        { "kind": "regex", "value": "(unpriced|未取到价格|价格缺失)", "note": "缺失价格必须标出明确状态" }
+      ]
+    }
+  ]
+}

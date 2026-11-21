@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "suite_id": "quick-research-behavior",
+  "target": "quick-research",
+  "split_seed": 42,
+  "train_ratio": 0.6,
+  "trigger_cases": [
+    {
+      "case_id": "q-trigger-basic",
+      "prompt": "帮我查一下 2026 年主流静电容与机械键盘轴体的长期口碑，主要看大家真实吐槽什么。",
+      "expected": "should_trigger",
+      "runs": 3
+    },
+    {
+      "case_id": "q-trigger-tech",
+      "prompt": "在 Docker 容器里部署本地反向代理并做端口映射时经常失败，有哪些常见排查定位点和坑？",
+      "expected": "should_trigger",
+      "runs": 3
+    },
+    {
+      "case_id": "q-trigger-compare",
+      "prompt": "LangGraph 和 LlamaIndex Workflows 在复杂有状态工作流编排上到底差多少，各自有哪些已知缺陷？",
+      "expected": "should_trigger",
+      "runs": 3
+    },
+    {
+      "case_id": "q-sibling-shopping",
+      "prompt": "我想买一条大码男装直筒休闲裤，预算 200 元以内，帮我比一下哪款用料更划算。",
+      "expected": "sibling",
+      "sibling_target": "shopping-research",
+      "runs": 3
+    },
+    {
+      "case_id": "q-sibling-yuqing",
+      "prompt": "大家对这次某汽车品牌系统更新翻车都是什么态度？国内外社区分别怎么评价的。",
+      "expected": "sibling",
+      "sibling_target": "yuqing-research",
+      "runs": 3
+    },
+    {
+      "case_id": "q-not-trigger-pure",
+      "prompt": "把这段英文翻译成中文：The quick brown fox jumps over the lazy dog.",
+      "expected": "should_not_trigger",
+      "runs": 3
+    },
+    {
+      "case_id": "q-not-trigger-local",
+      "prompt": "帮我计算一下今年 1 月到 6 月这份 CSV 表格里的月度总开销。",
+      "expected": "should_not_trigger",
+      "runs": 3
+    },
+    {
+      "case_id": "q-trigger-oss-vitals",
+      "prompt": "帮我调研一个开源智能体编排框架，先做三维生命体征验尸并查社区退坑反馈，看值不值得投入。",
+      "expected": "edge_case",
+      "runs": 3
+    }
+  ],
+  "output_cases": [
+    {
+      "case_id": "q-out-evidence-chain",
+      "prompt": "查一下「关闭系统休眠后快速启动是否仍然生效」，给出结论与出处。",
+      "assertions": [
+        { "kind": "contains", "value": "证据", "note": "报告必须呈现可核查的证据支撑" },
+        { "kind": "regex", "value": "SRC-(?:[A-Z0-9]{1,6}-)?\\d{3,4}", "note": "证据编号必须可追溯" },
+        { "kind": "contains", "value": "http", "note": "必须保留原始来源链接" },
+        { "kind": "not_contains", "value": "已安全绕行", "note": "受阻渠道必须如实透传，严禁粉饰" }
+      ],
+      "compare_against": ["baseline_prompt"]
+    },
+    {
+      "case_id": "q-out-citation-audit",
+      "prompt": "对比两款主流本地双链笔记软件的数据存储兼容性与长期迁移风险。",
+      "assertions": [
+        { "kind": "contains", "value": "引用校验", "note": "交付需附带 citation_audit 引用校验结果" },
+        { "kind": "regex", "value": "编造或越界编号", "note": "校验表必须展示越界编号检测字段" }
+      ],
+      "compare_against": ["baseline_prompt"]
+    },
+    {
+      "case_id": "q-out-fail-fast-and-gaps",
+      "prompt": "调研一个近期大版本重写的开源工具，整理常见故障和尚未覆盖的测试盲区。",
+      "assertions": [
+        { "kind": "regex", "value": "(未闭合|覆盖缺口|未做|尚未验证)", "note": "必须显式交代未验证边界与覆盖缺口" }
+      ]
+    }
+  ]
+}

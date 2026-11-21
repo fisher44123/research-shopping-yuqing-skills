@@ -1,0 +1,29 @@
+# research-shopping-yuqing-skills (llms.txt)
+
+> Evidence-first AI Agent Skill suite (`quick-research`, `shopping-research`, `yuqing-research`) and zero-dependency Python 3.10+ deterministic verification tools for deep research, SKU/price comparison, and public opinion analysis. Decoupled via BYOT (Bring Your Own Tools) schema — no platform scrapers included.
+
+Repository: https://github.com/fisher44123/research-shopping-yuqing-skills
+License: Apache-2.0
+
+## Agent Skills (Load Based on User Intent)
+- [quick-research](skills/quick-research/SKILL.md): General technical research, debugging, library comparison, and open-source 3-vital-sign evaluation with mandatory Via Negativa (failure/deprecation) checks.
+- [shopping-research](skills/shopping-research/SKILL.md): Consumer buying research featuring pre-search mechanism calibration, two-pause confirmation matrices, deterministic SKU verification, and cost-per-use comparison.
+- [yuqing-research](skills/yuqing-research/SKILL.md): Public opinion and sentiment analysis enforcing official/creator/grassroots lineage separation, domestic vs. international partitioning, 3-Gram Jaccard anti-shill filtering, and 4-quadrant comment sampling.
+
+## Contracts & Methodologies
+- [adapter-schema.json](skills/quick-research/references/adapter-schema.json): Standard JSON Schema (Draft 2020-12) for connecting any legal search MCP, API, or browser adapter (`run_meta`, `source_health`, `evidence_items`).
+- [review_gate.md](skills/quick-research/references/review_gate.md): Adversarial G1-G5 independent context verification protocol separating machine-checkable rules from human semantic review.
+- [benchmark-playbook.md](skills/quick-research/references/benchmark-playbook.md): Seven-step open-source architecture benchmarking and vital-sign checklist.
+- [methodology.md](skills/yuqing-research/references/methodology.md): Mathematical specs for danmaku spike detection, 3-Gram Jaccard clustering, and comment controversy index.
+
+## Zero-Dependency Deterministic Verification Tools (Python 3.10+ Stdlib Only)
+- [citation_audit.py](tools/citation_audit.py): `python tools/citation_audit.py <report.md> --registry <registry.json> --strict` — Detects invented `[SRC-xxx]` IDs and low-overlap context mismatches.
+- [review_check.py](tools/review_check.py): `python tools/review_check.py <report.md> --strict` — Enforces externalized rules in `tools/review_rules.json` to block unsourced metrics and unbacked claims.
+- [review_log.py](tools/review_log.py): `python tools/review_log.py --context <id> --gates "G1:PASS;..." --verdict <verdict>` — Appends independent review audit rows while rejecting `self`/`author` self-approval.
+- [sku_check.py](tools/sku_check.py): `python tools/sku_check.py --target "<title>" --cands-json <file> --dose <25g> --strict` — Parses brand/model/edition/capacity/compound-pack units and returns exit code 3 on SKU conflict.
+- [event_history_store.py](tools/event_history_store.py): SQLite `EventHistoryStore` with SHA-256 content/payload hashing, `source_health` ledger, and atomic JSON export.
+
+## Offline Verification & Demo
+- Demo: `python demo/run_demo.py`
+- Unit Tests: `python -m unittest discover -s tests -v`
+- Privacy & No-Scraper Gate: `python scripts/privacy_audit.py`

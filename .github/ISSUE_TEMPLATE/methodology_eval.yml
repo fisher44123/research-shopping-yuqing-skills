@@ -1,0 +1,30 @@
+name: "Methodology & Eval Proposal（方法论 / 评估用例建议）"
+description: "提议新增调研防呆规则、消费品避坑维度或 evals 评估用例（不接收站点爬虫需求）"
+title: "[Eval/Methodology]: "
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: target_skill
+    attributes:
+      label: "目标 Skill"
+      options:
+        - "quick-research"
+        - "shopping-research"
+        - "yuqing-research"
+        - "adapter-schema / review_gate"
+    validations:
+      required: true
+  - type: textarea
+    id: failure_case
+    attributes:
+      label: "真实翻车案例（What Failed Without This Rule?）"
+      description: "请描述大模型在常规调研时容易犯的真实错误（例如跨代混淆、忽略反向退坑等）"
+      validations:
+        required: true
+  - type: textarea
+    id: proposed_rule
+    attributes:
+      label: "建议的确定性检查或 Eval 断言"
+      description: "如何用明确正则、字段比对或断言用例自动识别此类问题？"
+      validations:
+        required: true
