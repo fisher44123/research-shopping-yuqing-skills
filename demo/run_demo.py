@@ -25,7 +25,17 @@ def _banner(title: str) -> None:
     print("=" * 72)
 
 
+def _ensure_utf8_stdio() -> None:
+    for _s in (sys.stdout, sys.stderr):
+        if hasattr(_s, "reconfigure"):
+            try:
+                _s.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+
+
 def main() -> int:
+    _ensure_utf8_stdio()
     report_path = os.path.join(DEMO, "sample_flawed_report.md")
     registry_path = os.path.join(DEMO, "sample_registry.json")
     sku_cands_path = os.path.join(DEMO, "sample_sku_candidates.json")

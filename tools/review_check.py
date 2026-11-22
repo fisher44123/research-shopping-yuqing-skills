@@ -229,7 +229,17 @@ def check_ledger(path=None):
     return bad
 
 
+def _ensure_utf8_stdio() -> None:
+    for _s in (sys.stdout, sys.stderr):
+        if hasattr(_s, "reconfigure"):
+            try:
+                _s.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+
+
 def main():
+    _ensure_utf8_stdio()
     ap = argparse.ArgumentParser(description="交付前确定性检查（机器可判部分）")
     ap.add_argument("report")
     ap.add_argument("--strict", action="store_true", help="有 FAIL 即退出码 1")

@@ -581,7 +581,17 @@ def _load_cands(path):
     return out
 
 
+def _ensure_utf8_stdio() -> None:
+    for _s in (sys.stdout, sys.stderr):
+        if hasattr(_s, "reconfigure"):
+            try:
+                _s.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+
+
 def main(argv=None):
+    _ensure_utf8_stdio()
     ap = argparse.ArgumentParser(description="商品实体核对（品牌/型号/后缀/容量/颜色）")
     ap.add_argument("--target", required=True, help="目标商品标题（决赛圈那一款）")
     ap.add_argument("--cand", action="append", default=[],

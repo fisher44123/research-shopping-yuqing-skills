@@ -98,7 +98,17 @@ def scan_tree(root: str = ROOT) -> tuple[int, list[dict]]:
     return scanned, violations
 
 
+def _ensure_utf8_stdio() -> None:
+    for _s in (sys.stdout, sys.stderr):
+        if hasattr(_s, "reconfigure"):
+            try:
+                _s.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+
+
 def main() -> int:
+    _ensure_utf8_stdio()
     scanned, violations = scan_tree(ROOT)
     print("=" * 72)
     print(f"Privacy & No-Scraper Audit | Scanned {scanned} files under {os.path.basename(ROOT)}")

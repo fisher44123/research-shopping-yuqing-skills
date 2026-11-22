@@ -76,6 +76,56 @@ class CitationAuditTests(unittest.TestCase):
             )
             self.assertEqual(p.returncode, 1)
 
+    def test_polarity_flip_detected_and_rendered(self) -> None:
+        snippets = {
+            "SRC-001": "实测当前版本在离线环境下明确不支持本地部署，且已知内存泄露问题仍未修复。",
+        }
+        body = (
+            "## 1. 核心结论\n"
+            "最新版本在离线环境下已经支持本地部署，并且历史内存泄露问题已修复 [SRC-001]。\n"
+        )
+        rep, md = citation_audit.audit_and_render(
+            body, ["SRC-001"], evidence_snippets=snippets
+        )
+        self.assertEqual(rep["status"], "warn")
+        self.assertGreaterEqual(len(rep["polarity_warnings"]), 1)
+        pairs = {w["pair"] for w in rep["polarity_warnings"]}
+        self.assertIn("支持/不支持", pairs)
+        self.assertIn("已修复/未修复", pairs)
+        self.assertIn("疑似极性反转", md)
+
+    def test_reverse_polarity_affirmative_source_negated_claim(self) -> None:
+        snippets = {
+            "SRC-002": "官方已经在 v2.0 正式支持原生运行，目前团队保持活跃维护更新。",
+        }
+        body = (
+            "## 1. 结论\n"
+            "截至目前官方仍不支持原生运行，插件已停更跑路 [SRC-002]。\n"
+        )
+        rep = citation_audit.audit_citations(
+            body, ["SRC-002"], evidence_snippets=snippets
+        )
+        self.assertEqual(rep["status"], "warn")
+        dirs = {w["direction"] for w in rep["polarity_warnings"]}
+        self.assertIn("证据肯定 / 正文否定", dirs)
+
+    def test_consistent_polarity_questions_and_mixed_not_flagged(self) -> None:
+        snippets = {
+            "SRC-001": "实测当前版本在离线环境下明确不支持本地部署，兼容 Linux 与 macOS。",
+            "SRC-002": "官方在旧版不支持，但 v2.0 起已全面支持离线运行与热重载。",
+        }
+        body = (
+            "## 1. 结论\n"
+            "实测当前版本在离线环境下确实不支持本地部署 [SRC-001]。\n"
+            "读者常问：这个方案现在到底是否支持离线运行？ [SRC-001]\n"
+            "虽然旧版不支持，但从 v2.0 起已全面支持离线运行 [SRC-002]。\n"
+        )
+        rep = citation_audit.audit_citations(
+            body, ["SRC-001", "SRC-002"], evidence_snippets=snippets
+        )
+        self.assertEqual(rep["polarity_warnings"], [])
+        self.assertEqual(rep["status"], "pass")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -109,6 +109,104 @@ def _weak_citations(body: str, evidence_snippets: dict) -> list[dict]:
     return sorted(seen.values(), key=lambda x: x["overlap"])
 
 
+_POLARITY_PAIRS: tuple[tuple[str, str, str], ...] = (
+    (
+        r"不支持|不再支持|并未支持|没有支持|未支持|不具备|无法支持|不能支持|(?<![a-z])(?:unsupported|does not support|doesn't support|not support)(?![a-z])",
+        r"(?<!不)(?<!未)(?<!没)(?<!再)(?<!无)(?<!不再)(?<!没有)(?<!并未)(?<!尚未)(?<!无法)(?<!不能)支持|(?<![a-z])(?<!not )supported(?![a-z])",
+        "支持/不支持",
+    ),
+    (
+        r"未修复|没修复|尚未修复|仍未修复|并未修复|没有修复|(?<![a-z])(?:unfixed|not fixed|unresolved)(?![a-z])",
+        r"(?<!未)(?<!没)(?<!尚未)(?<!仍未)(?<!并未)(?<!没有)修复|(?<![a-z])(?<!not )(?:fixed|resolved)(?![a-z])",
+        "已修复/未修复",
+    ),
+    (
+        r"无法正常(?:使用|运行|工作)|不能正常(?:使用|运行)|无法使用|不能使用|无法运行|无法连接|无法登录|不可用|已失效|彻底失效|(?<![a-z])(?:broken|unavailable|unusable|cannot run|can't run|cannot use|can't use)(?![a-z])",
+        r"(?<!不)(?<!没)(?<!未)可用|正常使用|正常运行|正常工作|稳定运行|(?<![a-z])(?<!not )works(?![a-z])",
+        "可用/不可用",
+    ),
+    (
+        r"不兼容|并不兼容|无法兼容|(?<![a-z])(?:incompatible|not compatible)(?![a-z])",
+        r"(?<!不)(?<!并未)(?<!无法)兼容|(?<![a-z])(?<!not )compatible(?![a-z])",
+        "兼容/不兼容",
+    ),
+    (
+        r"已弃用|已废弃|已停更|已跑路|停止维护|不再维护|(?<![a-z])(?:deprecated|archived|unmaintained|abandoned)(?![a-z])",
+        r"活跃维护|持续更新|正常维护|还在维护|持续维护|(?<![a-z])actively maintained(?![a-z])",
+        "维护/停更",
+    ),
+    (
+        r"不推荐|并不推荐|不建议|慎用|劝退|强烈不推荐|(?<![a-z])not recommended(?![a-z])",
+        r"(?<!不)(?<!并不)推荐|强烈推荐|值得买|(?<![a-z])(?<!not )recommended(?![a-z])",
+        "推荐/不推荐",
+    ),
+    (
+        r"(?:存在|出现|触发|仍有|发生|造成|引起|引发)内存泄[漏露]|(?<!不)(?<!没)(?<!未)(?<!没有)(?<!并未)发现内存泄[漏露]|内存泄[漏露](?:严重|问题|bug|翻车)|(?<![a-z])(?<!no )memory leak(?![a-z])",
+        r"(?:无|没有|不存在|已消除|并未发现|未发现|并未出现|未出现|不出现)内存泄[漏露]|(?<![a-z])no memory leak(?![a-z])",
+        "内存泄露有无",
+    ),
+)
+_QUESTION_SENT_RE = re.compile(r"(?:[？?]\s*$|是否|有没有|能不能|可不可以)")
+
+
+def _sentence_at(text: str, pos: int) -> str:
+    """Slice the sentence or bullet line enclosing pos (capped at 260 chars)."""
+    start = pos
+    while start > 0 and text[start - 1] not in "\n。！；!":
+        start -= 1
+    end = pos
+    n = len(text)
+    while end < n and text[end] not in "\n。！；!":
+        end += 1
+    return text[start:end].strip()[:260]
+
+
+def _polarity_conflicts(body: str, evidence_snippets: dict) -> list[dict]:
+    """Detect zero-token negation polarity flips on high-overlap citations."""
+    compiled = [
+        (re.compile(neg, re.I), re.compile(pos, re.I), label)
+        for neg, pos, label in _POLARITY_PAIRS
+    ]
+    seen: dict[tuple[str, str], dict] = {}
+    for m in SRC_RE.finditer(body):
+        sid = m.group(0)
+        snippet = evidence_snippets.get(sid)
+        if not snippet:
+            continue
+        ev_terms = set(_terms(snippet))
+        if len(ev_terms) < MIN_SNIPPET_TERMS:
+            continue
+        ctx_terms = set(_terms(_context_at(body, m.start())))
+        overlap = len(ev_terms & ctx_terms) / len(ev_terms)
+        if overlap < WEAK_OVERLAP:
+            continue
+        sent = _sentence_at(body, m.start())
+        if not sent or _QUESTION_SENT_RE.search(sent):
+            continue
+        ev_text = str(snippet)
+        for neg_re, pos_re, label in compiled:
+            ev_neg = bool(neg_re.search(ev_text))
+            ev_pos = bool(pos_re.search(ev_text))
+            cl_neg = bool(neg_re.search(sent))
+            cl_pos = bool(pos_re.search(sent))
+            if (ev_neg and ev_pos) or (cl_neg and cl_pos):
+                continue
+            direction = ""
+            if (ev_neg and not ev_pos) and (cl_pos and not cl_neg):
+                direction = "证据否定 / 正文肯定"
+            elif (ev_pos and not ev_neg) and (cl_neg and not cl_pos):
+                direction = "证据肯定 / 正文否定"
+            if direction and (sid, label) not in seen:
+                seen[(sid, label)] = {
+                    "id": sid,
+                    "line": _line_no(body, m.start()),
+                    "pair": label,
+                    "direction": direction,
+                    "overlap": round(overlap, 3),
+                }
+    return list(seen.values())
+
+
 def audit_citations(
     text: str,
     known_ids,
@@ -139,10 +237,11 @@ def audit_citations(
     coverage = round(covered * 100.0 / total, 1) if total else None
     body_citations = sum(s["citations"] for s in sections)
     weak = _weak_citations(body, evidence_snippets) if evidence_snippets else []
+    polarity = _polarity_conflicts(body, evidence_snippets) if evidence_snippets else []
 
     if unknown:
         status = "fail"
-    elif weak:
+    elif weak or polarity:
         status = "warn"
     elif total and body_citations and coverage is not None and coverage < 50.0:
         status = "warn"
@@ -157,6 +256,7 @@ def audit_citations(
         "registered": len(known),
         "unknown_ids": unknown,
         "weak_citations": weak,
+        "polarity_warnings": polarity,
         "sections_total": total,
         "sections_covered": covered,
         "coverage_pct": coverage,
@@ -178,6 +278,7 @@ def render_markdown(report: dict) -> str:
         cov_icon = "✅" if cov >= 80 else ("⚠️" if cov >= 50 else "🔴")
         cov_txt = f"{report['sections_covered']}/{report['sections_total']}（{cov}%）"
     unknown = report.get("unknown_ids") or []
+    polarity = report.get("polarity_warnings") or []
     lines = [
         "",
         "---",
@@ -194,6 +295,7 @@ def render_markdown(report: dict) -> str:
         f"| 编造或越界编号 | {len(unknown)} | {'🔴 需核' if unknown else '✅'} |",
         f"| 引用上下文与证据重合度过低 | {len(report.get('weak_citations') or [])} | "
         f"{'⚠️ 需核' if report.get('weak_citations') else '✅'} |",
+        f"| 疑似极性反转（正反说反） | {len(polarity)} | {'⚠️ 需核' if polarity else '✅'} |",
         f"| 正文章节覆盖率 | {cov_txt} | {cov_icon} |",
     ]
     if unknown:
@@ -202,6 +304,9 @@ def render_markdown(report: dict) -> str:
     if weak:
         detail = "；".join(f"`{w['id']}` L{w['line']}（重合 {w['overlap']:.0%}）" for w in weak[:5])
         lines += ["", f"- ⚠️ **引用了真编号，但上下文与被引证据几乎不重合（疑似引用与内容不符）**：{detail}"]
+    if polarity:
+        pdetail = "；".join(f"`{p['id']}` L{p['line']}（{p['pair']}：{p['direction']}）" for p in polarity[:5])
+        lines += ["", f"- ⚠️ **引用了高重合真编号，但正反极性与被引证据相反（疑似把原文说反）**：{pdetail}"]
     empty = report.get("sections_without_citation") or []
     if empty and report.get("body_citations"):
         shown = "；".join(empty[:3])
@@ -257,7 +362,17 @@ def load_registry(path: str) -> tuple[list[str], dict[str, str]]:
     return known_ids, snippets
 
 
+def _ensure_utf8_stdio() -> None:
+    for _s in (sys.stdout, sys.stderr):
+        if hasattr(_s, "reconfigure"):
+            try:
+                _s.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+
+
 def main(argv=None) -> int:
+    _ensure_utf8_stdio()
     if argv is None and len(sys.argv) == 1:
         sample = (
             "## 1. 结论\n这里引用 [SRC-001] 和 [SRC-099]。\n"

@@ -8,6 +8,7 @@ import argparse
 import datetime as dt
 import os
 import re
+import sys
 
 DEFAULT_LOG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "review_log.md")
 HEADER = ("# 独立审核台账（人工抽查用）\n\n"
@@ -15,7 +16,17 @@ HEADER = ("# 独立审核台账（人工抽查用）\n\n"
           "> 格式：时间 ｜ 上下文 ID ｜ 目标 ｜ G1–G5 ｜ 结论 ｜ 最不满意的一处\n\n")
 
 
+def _ensure_utf8_stdio() -> None:
+    for _s in (sys.stdout, sys.stderr):
+        if hasattr(_s, "reconfigure"):
+            try:
+                _s.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+
+
 def main(argv=None):
+    _ensure_utf8_stdio()
     ap = argparse.ArgumentParser(description="追加一条独立审核记录")
     ap.add_argument("--context", required=True, help="子 agent ID / 新会话标识（必填，不许编）")
     ap.add_argument("--gates", required=True, help="五条门禁逐条结果，如 G1:PASS;G2:FAIL")
